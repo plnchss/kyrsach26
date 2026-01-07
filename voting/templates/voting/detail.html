@@ -1,0 +1,213 @@
+{% load custom_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ voting.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        header {
+            background-color: #af4c8b;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .auth-buttons a,
+        .auth-buttons form,
+        .auth-buttons span {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .auth-buttons button,
+        .auth-buttons a {
+            padding: 5px 12px;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .auth-buttons a {
+            background-color: white;
+            color: #6c0239;
+        }
+        .auth-buttons button {
+            background-color: white;
+            color: #470235;
+        }
+        .auth-buttons button:hover,
+        .auth-buttons a:hover {
+            background-color: #310019;
+            color: white;
+        }
+
+        /* Main content */
+        .content {
+            margin: 20px;
+        }
+
+        .nomination {
+            margin-bottom: 35px;
+        }
+        .nomination h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .participant img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .participant-info {
+            flex-grow: 1;
+        }
+        .participant-info strong {
+            margin-right: 6px;
+        }
+
+        .vote-message {
+            font-style: italic;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .participant form button,
+        .unvote-button {
+            background-color: #9a005f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        .participant form button:hover,
+        .unvote-button:hover {
+            background-color: #6c004d;
+        }
+
+        a {
+            color: #9a005f;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .back-link {
+              display: inline-block;
+              margin-bottom: 15px;
+              padding: 6px 12px;
+              background-color: #f3d0e4;
+              color: #6c0239;
+              border-radius: 6px;
+              font-size: 14px;
+        }
+        .back-link:hover {
+              background-color: #e6a9c9;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Онлайн-голосования</h1>
+    <div class="auth-buttons">
+        {% if user.is_authenticated %}
+            <span>{{ user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">Выйти</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">Войти</a>
+            <a href="{% url 'register' %}">Зарегистрироваться</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="content">
+    <a href="{% url 'index' %}" class="back-link">← К списку голосований</a>
+    <h1>{{ voting.title }}</h1>
+    <p>{{ voting.description }}</p>
+
+    <h2>Номинации</h2>
+
+    {% for nomination in voting.nominations.all %}
+        <div class="nomination">
+            <h3>{{ nomination.title }}</h3>
+
+            {% if user.is_authenticated and user_votes|get_item:nomination.id %}
+                <p class="vote-message">
+                    Вы уже проголосовали в этой номинации. Голосовать можно только один раз.
+                </p>
+
+                <form action="{% url 'unvote' user_votes|get_item:nomination.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="unvote-button">
+                        Отменить голос
+                    </button>
+                </form>
+
+            {% else %}
+                <ul style="padding:0; list-style:none;">
+                    {% for participant in nomination.participants.all %}
+                        <li class="participant">
+                            {% if participant.avatar %}
+                                <img src="{{ participant.avatar.url }}" alt="{{ participant.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/50" alt="Нет фото">
+                            {% endif %}
+
+                            <div class="participant-info">
+                                <strong>{{ participant.name }}</strong>
+                                — {{ participant.vote_set.count }} голосов
+                            </div>
+
+                            {% if user.is_authenticated %}
+                                <form action="{% url 'vote' participant.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit">Голосовать</button>
+                                </form>
+                            {% else %}
+                                <a href="{% url 'login' %}?next={{ request.path }}">
+                                    Войти, чтобы голосовать
+                                </a>
+                            {% endif %}
+                        </li>
+                    {% empty %}
+                        <li>Нет участников</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>Нет номинаций</p>
+    {% endfor %}
+</div>
+
+</body>
+</html>
