@@ -3,148 +3,107 @@
 <html>
 <head>
     <title>{{ voting.title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            font-family: 'Montserrat', sans-serif;
             margin: 0;
             padding: 0;
+            background: linear-gradient(135deg, #7b2fbf, #ffb6c1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Header */
         header {
-            background-color: #af4c8b;
+            background-color: rgba(0,0,0,0.95);
             color: white;
-            padding: 10px 20px;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .auth-buttons a,
-        .auth-buttons form,
-        .auth-buttons span {
-            display: inline-block;
-            margin-left: 10px;
-        }
-        .auth-buttons button,
-        .auth-buttons a {
+        header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+
+        .auth-buttons a, .auth-buttons form, .auth-buttons span { display: inline-block; margin-left: 10px; }
+        .auth-buttons a, .auth-buttons button {
             padding: 5px 12px;
+            border-radius: 8px;
             text-decoration: none;
-            border: none;
-            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
+            border: none;
+            transition: all 0.25s;
+            background: white;
+            color: #7b2fbf;
         }
-        .auth-buttons a {
-            background-color: white;
-            color: #6c0239;
-        }
-        .auth-buttons button {
-            background-color: white;
-            color: #470235;
-        }
-        .auth-buttons button:hover,
-        .auth-buttons a:hover {
-            background-color: #310019;
+        .auth-buttons a:hover, .auth-buttons button:hover {
+            background: #ff66b2;
             color: white;
+            transform: scale(1.05);
         }
 
-        /* Main content */
         .content {
-            margin: 20px;
+            flex-grow: 1;
+            padding: 20px;
         }
 
-        .nomination {
-            margin-bottom: 35px;
-        }
-        .nomination h3 {
-            color: #333;
+        .back-link {
+            display: inline-block;
             margin-bottom: 15px;
+            padding: 6px 12px;
+            background-color: rgba(255,255,255,0.15);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
         }
+        .back-link:hover { background-color: #ff66b2; color: white; }
 
+        h1, h2, h3 { color: white; }
+
+        .nomination { margin-bottom: 30px; }
         .participant {
             display: flex;
             align-items: center;
-            background: white;
+            background: rgba(255,255,255,0.15);
             padding: 10px;
             margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.3s, box-shadow 0.3s, border 0.3s;
         }
-        .participant img {
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            margin-right: 12px;
-        }
-        .participant-info {
-            flex-grow: 1;
-        }
-        .participant-info strong {
-            margin-right: 6px;
-        }
+        .participant:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.25); }
+        .participant img { border-radius: 50%; width: 50px; height: 50px; object-fit: cover; margin-right: 12px; }
+        .participant-info { flex-grow: 1; color: #f0e6f7; }
+        .participant-info strong { margin-right: 6px; }
 
-        .vote-message {
-            font-style: italic;
-            color: #888;
-            margin-bottom: 10px;
+        .vote-message { font-style: italic; color: #ffd6eb; margin-bottom: 10px; }
+        .participant form button, .unvote-button {
+            background-color: #ff66b2; color: white; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer;
+            transition: all 0.2s;
         }
-
-        .participant form button,
-        .unvote-button {
-            background-color: #9a005f;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 6px 12px;
-            cursor: pointer;
-        }
-        .participant form button:hover,
-        .unvote-button:hover {
-            background-color: #6c004d;
-        }
-
-        a {
-            color: #9a005f;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .back-link {
-              display: inline-block;
-              margin-bottom: 15px;
-              padding: 6px 12px;
-              background-color: #f3d0e4;
-              color: #6c0239;
-              border-radius: 6px;
-              font-size: 14px;
-        }
-        .back-link:hover {
-              background-color: #e6a9c9;
-        }
-
+        .participant form button:hover, .unvote-button:hover { background-color: #cc2970; transform: scale(1.05); }
     </style>
 </head>
 <body>
-
 <header>
     <h1>Онлайн-голосования</h1>
     <div class="auth-buttons">
         {% if user.is_authenticated %}
-            <span>{{ user.username }}</span>
+            <span style="color:white; font-weight:500;">{{ user.username }}</span>
             <form action="{% url 'logout' %}" method="post" style="display:inline;">
                 {% csrf_token %}
                 <button type="submit">Выйти</button>
             </form>
+            {% if user.is_staff %}
+                <a href="{% url 'admin:index' %}">Админка</a>
+            {% endif %}
         {% else %}
             <a href="{% url 'login' %}">Войти</a>
-            <a href="{% url 'register' %}">Зарегистрироваться</a>
+            <a href="{% url 'register' %}">Регистрация</a>
         {% endif %}
     </div>
 </header>
@@ -152,26 +111,19 @@
 <div class="content">
     <a href="{% url 'index' %}" class="back-link">← К списку голосований</a>
     <h1>{{ voting.title }}</h1>
-    <p>{{ voting.description }}</p>
+    <p style="color:white;">{{ voting.description }}</p>
 
     <h2>Номинации</h2>
-
     {% for nomination in voting.nominations.all %}
         <div class="nomination">
             <h3>{{ nomination.title }}</h3>
 
-            {% if user.is_authenticated and user_votes|get_item:nomination.id %}
-                <p class="vote-message">
-                    Вы уже проголосовали в этой номинации. Голосовать можно только один раз.
-                </p>
-
+            {% if user.is_authenticated and nomination.id in user_votes %}
+                <p class="vote-message">Вы уже проголосовали в этой номинации. Голосовать можно только один раз.</p>
                 <form action="{% url 'unvote' user_votes|get_item:nomination.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="unvote-button">
-                        Отменить голос
-                    </button>
+                    <button type="submit" class="unvote-button">Отменить голос</button>
                 </form>
-
             {% else %}
                 <ul style="padding:0; list-style:none;">
                     {% for participant in nomination.participants.all %}
@@ -181,33 +133,27 @@
                             {% else %}
                                 <img src="https://via.placeholder.com/50" alt="Нет фото">
                             {% endif %}
-
                             <div class="participant-info">
-                                <strong>{{ participant.name }}</strong>
-                                — {{ participant.vote_set.count }} голосов
+                                <strong>{{ participant.name }}</strong> — {{ participant.votes.count }} голосов
                             </div>
-
                             {% if user.is_authenticated %}
                                 <form action="{% url 'vote' participant.id %}" method="post">
                                     {% csrf_token %}
                                     <button type="submit">Голосовать</button>
                                 </form>
                             {% else %}
-                                <a href="{% url 'login' %}?next={{ request.path }}">
-                                    Войти, чтобы голосовать
-                                </a>
+                                <a href="{% url 'login' %}?next={{ request.path }}" style="color:white;">Войти, чтобы голосовать</a>
                             {% endif %}
                         </li>
                     {% empty %}
-                        <li>Нет участников</li>
+                        <li style="color:white;">Нет участников</li>
                     {% endfor %}
                 </ul>
             {% endif %}
         </div>
     {% empty %}
-        <p>Нет номинаций</p>
+        <p style="color:white;">Нет номинаций</p>
     {% endfor %}
 </div>
-
 </body>
 </html>

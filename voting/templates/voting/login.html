@@ -2,109 +2,110 @@
 <html>
 <head>
     <title>Вход</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #ffe6f0; /* светло-розовый фон */
+            font-family: 'Montserrat', sans-serif;
             margin: 0;
             padding: 0;
+            background: linear-gradient(135deg, #7b2fbf, #ffb6c1);
+            min-height: 100vh;
         }
 
-        /* Header */
         header {
-            background-color: #56163a; /* насыщенный розовый */
+            background-color: rgba(0,0,0,0.95);
             color: white;
-            padding: 10px 20px;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .auth-buttons a {
-            display: inline-block;
-            margin-left: 10px;
-            padding: 5px 12px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 14px;
-            background-color: white;
-            color: #ff66b2;
-        }
-        .auth-buttons a:hover {
-            background-color: #ff3399;
-            color: white;
-        }
+        header h1 { margin: 0; font-size: 24px; font-weight: 600; }
 
-        /* Login form */
+        .auth-buttons a {
+            padding: 5px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s;
+            background: white;
+            color: #7b2fbf;
+        }
+        .auth-buttons a:hover { background: #ff66b2; color: white; transform: scale(1.05); }
+
         .login-container {
             max-width: 400px;
-            margin: 50px auto;
-            background-color: white;
+            margin: 60px auto;
+            background: rgba(255,255,255,0.15);
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
         }
-        h2 {
-            text-align: center;
-            color: #ff3399;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        form input {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
+
+        h2 { text-align: center; color: white; margin-bottom: 20px; }
+
+        form { display: flex; flex-direction: column; }
+        form label { margin-bottom: 5px; font-weight: 600; color: white; }
+        form input { margin-bottom: 15px; padding: 10px; border-radius: 8px; border: none; font-size: 14px; }
+
         form button {
             padding: 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             background-color: #ff66b2;
             color: white;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
         }
-        form button:hover {
-            background-color: #ff3399;
-        }
+        form button:hover { background-color: #cc2970; transform: scale(1.05); }
+
         .register-link {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 12px;
         }
-        .register-link a {
-            color: #ff66b2;
-            text-decoration: none;
-        }
-        .register-link a:hover {
-            text-decoration: underline;
-        }
+        .register-link a { color: #fcd6e7; font-weight: 600; text-decoration: none; }
+        .register-link a:hover { text-decoration: underline; }
+
+        .errorlist { color: #ffcccc; margin-bottom: 10px; list-style: none; padding-left: 0; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Онлайн-голосования</h1>
-        <div class="auth-buttons">
-            <a href="{% url 'register' %}">Зарегистрироваться</a>
-        </div>
-    </header>
+<header>
+    <h1>Онлайн-голосования</h1>
+    <div class="auth-buttons"><a href="{% url 'register' %}">Регистрация</a></div>
+</header>
 
-    <div class="login-container">
-        <h2>Вход</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Войти</button>
-        </form>
-        <div class="register-link">
-            <p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
-        </div>
+<div class="login-container">
+    <h2>Вход</h2>
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <label for="id_username">Имя пользователя</label>
+        <input type="text" name="username" id="id_username" required>
+
+        <label for="id_password">Пароль</label>
+        <input type="password" name="password" id="id_password" required>
+
+        <button type="submit">Войти</button>
+    </form>
+
+    <div class="register-link">
+        Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a>
     </div>
+</div>
 </body>
 </html>
