@@ -1,66 +1,51 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 from import_export.admin import ExportMixin
 from .models import Voting, Nomination, Participant, Vote
+from .resources import VotingResource
 
-# -------------------- Inlines --------------------
 class NominationInline(admin.TabularInline):
     model = Nomination
-    extra = 1
-
+    extra = 0
 
 class ParticipantInline(admin.TabularInline):
     model = Participant
-    extra = 1
-    autocomplete_fields = ("nomination",)
+    extra = 1 # Сколько пустых строк для новых участников показать сразу
 
-
-# -------------------- Voting --------------------
 @admin.register(Voting)
 class VotingAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ("id", "title", "start_date", "end_date", "created_at", "is_active")
+    resource_class = VotingResource
+    list_display = ("title", "start_date", "end_date", "display_status")
     list_filter = ("start_date", "end_date")
-    date_hierarchy = "start_date"
     inlines = [NominationInline]
     search_fields = ("title",)
-    list_display_links = ("id", "title")
 
-    @admin.display(boolean=True, description="Активно")
-    def is_active(self, obj):
-        return obj.is_active
+    def display_status(self, obj):
+        if obj.is_active:
+            return format_html('<b style="color: green;">Активно</b>')
+        return format_html('<b style="color: red;">Завершено</b>')
+    display_status.short_description = "Статус"
 
-
-# -------------------- Nomination --------------------
 @admin.register(Nomination)
-class NominationAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ("id", "title", "voting", "participants_count")
-    list_filter = ("voting",)
-    inlines = [ParticipantInline]
-    search_fields = ("title",)
-    list_display_links = ("id", "title")
+class NominationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'voting')
+    inlines = [ParticipantInline] # участники внутри номинации
 
-    @admin.display(description="Количество участников")
-    def participants_count(self, obj):
-        return obj.participants.count()
-
-
-# -------------------- Participant --------------------
 @admin.register(Participant)
 class ParticipantAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ("id", "name", "nomination", "votes_count", "created_at")
-    list_filter = ("nomination", "nomination__voting")
-    search_fields = ("name", "nomination__title", "nomination__voting__title")
-    autocomplete_fields = ("nomination",)
+    list_display = ("name", "link_to_nomination", "votes_count")
+    
+    def link_to_nomination(self, obj):
+        link = reverse("admin:voting_nomination_change", args=[obj.nomination.id])
+        return format_html('<a href="{}">{}</a>', link, obj.nomination.title)
+    link_to_nomination.short_description = "Номинация"
 
-    @admin.display(description="Количество голосов")
     def votes_count(self, obj):
         return obj.votes.count()
+    votes_count.short_description = "Голосов"
 
-
-# -------------------- Vote --------------------
 @admin.register(Vote)
-class VoteAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ("id", "user", "participant", "voted_at")
-    list_filter = ("voted_at", "participant__nomination__voting")
-    date_hierarchy = "voted_at"
-    search_fields = ("user__username", "participant__name", "participant__nomination__title")
-    autocomplete_fields = ("participant", "user")
+class VoteAdmin(admin.ModelAdmin):
+    list_display = ("user", "participant", "voted_at")
+    raw_id_fields = ("user", "participant") # удобный выбор ID
